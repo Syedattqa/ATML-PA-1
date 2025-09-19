@@ -14,10 +14,10 @@ from torchvision.utils import save_image
 import warnings
 warnings.filterwarnings('ignore')
 
-# Set device
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# CIFAR-10 class names
+
 cifar10_classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # ----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ def setup_data():
 class VAEEncoder(nn.Module):
     def __init__(self, latent_dim=128):
         super(VAEEncoder, self).__init__()
-        # Simple encoder for 32x32 input (CIFAR-10 default)
+        #32x32 input
         self.conv1 = nn.Conv2d(3, 64, 4, 2, 1)    # 16x16
         self.conv2 = nn.Conv2d(64, 128, 4, 2, 1)  # 8x8
         self.conv3 = nn.Conv2d(128, 256, 4, 2, 1) # 4x4
@@ -79,7 +79,7 @@ class VAEEncoder(nn.Module):
 class VAEDecoder(nn.Module):
     def __init__(self, latent_dim=128):
         super(VAEDecoder, self).__init__()
-        # Simple decoder for 32x32 output (CIFAR-10 default)
+        # 32x32 output 
         self.fc = nn.Linear(latent_dim, 512 * 2 * 2)
 
         self.deconv1 = nn.ConvTranspose2d(512, 256, 4, 2, 1)  # 4x4
@@ -130,7 +130,7 @@ class VAE(nn.Module):
 class DCGANGenerator(nn.Module):
     def __init__(self, latent_dim=128):
         super(DCGANGenerator, self).__init__()
-        # Stronger generator with more capacity for better image quality
+        
         self.main = nn.Sequential(
             # latent_dim -> 1024 x 4 x 4 (doubled capacity)
             nn.ConvTranspose2d(latent_dim, 1024, 4, 1, 0, bias=False),
@@ -150,7 +150,7 @@ class DCGANGenerator(nn.Module):
         )
 
     def forward(self, input):
-        # Ensure input has the right shape: (batch_size, latent_dim, 1, 1)
+        
         if input.dim() == 2:
             input = input.unsqueeze(2).unsqueeze(3)  # (batch_size, latent_dim, 1, 1)
         return self.main(input)
@@ -158,7 +158,7 @@ class DCGANGenerator(nn.Module):
 class DCGANDiscriminator(nn.Module):
     def __init__(self):
         super(DCGANDiscriminator, self).__init__()
-        # Simple discriminator for 32x32 input (CIFAR-10 default)
+        # 32x32 input 
         self.main = nn.Sequential(
             # 3 x 32 x 32 -> 64 x 16 x 16
             nn.Conv2d(3, 64, 4, 2, 1, bias=False),
@@ -173,7 +173,7 @@ class DCGANDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
         )
 
-        # Final convolutional layer (DCGAN standard)
+        # Final convolutional layer 
         self.final_conv = nn.Conv2d(256, 1, 4, 1, 0, bias=False)
 
     def forward(self, input):
@@ -186,10 +186,10 @@ class DCGANDiscriminator(nn.Module):
 # ----------------------------------------------------------------------------
 
 def vae_loss_function(recon_x, x, mu, log_var, beta=0.01):
-    # Reconstruction loss - prioritize pixel accuracy
+    # Reconstruction loss 
     recon_loss = F.mse_loss(recon_x, x, reduction='sum')
 
-    # KL divergence loss with very small beta for sharp reconstructions
+    # KL divergence loss
     kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
     return recon_loss + beta * kl_loss, recon_loss, kl_loss
@@ -236,7 +236,7 @@ def train_gan(generator, discriminator, train_loader, num_epochs=100, lr_g=2e-4,
     generator.to(device)
     discriminator.to(device)
 
-    # Weight initialization - Xavier initialization
+    # Weight initialization - Xavier
     def weights_init(m):
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
@@ -254,14 +254,14 @@ def train_gan(generator, discriminator, train_loader, num_epochs=100, lr_g=2e-4,
     generator.apply(weights_init)
     discriminator.apply(weights_init)
 
-    # Hinge loss functions for better stability
+    # Hinge loss functions
     def d_hinge_loss(real_pred, fake_pred):
         return torch.mean(F.relu(1. - real_pred)) + torch.mean(F.relu(1. + fake_pred))
 
     def g_hinge_loss(fake_pred):
         return -torch.mean(fake_pred)
 
-    # Optimizers - weaker discriminator learning rate
+    # Optimizers 
     optimizer_G = optim.Adam(generator.parameters(), lr=lr_g, betas=(0.5, 0.999))
     optimizer_D = optim.Adam(discriminator.parameters(), lr=lr_d, betas=(0.5, 0.999))
 
@@ -273,7 +273,7 @@ def train_gan(generator, discriminator, train_loader, num_epochs=100, lr_g=2e-4,
     d_losses = []
     d_accuracies = []
 
-    print("Training GAN with Hinge Loss (improved stability)...")
+    print("Training GAN with Hinge Loss")
     for epoch in range(num_epochs):
         total_d_loss = 0
         total_g_loss = 0
@@ -291,7 +291,7 @@ def train_gan(generator, discriminator, train_loader, num_epochs=100, lr_g=2e-4,
             # Real data
             real_output = discriminator(real_data)
 
-            # Fake data - use standard normal noise (no scaling)
+            # Fake data 
             noise = torch.randn(batch_size, latent_dim, device=device)
             fake_data = generator(noise)
             fake_output = discriminator(fake_data.detach())
@@ -308,8 +308,8 @@ def train_gan(generator, discriminator, train_loader, num_epochs=100, lr_g=2e-4,
             d_loss.backward()
             optimizer_D.step()
 
-            # Train Generator twice per discriminator update for stronger generator
-            for _ in range(2):  # Train generator 2x more frequently
+            # Train Generator twice
+            for _ in range(2):  
                 optimizer_G.zero_grad()
 
                 # Generate fake data
@@ -351,7 +351,7 @@ def compare_reconstruction_vs_generation(vae, generator, test_loader, num_sample
     vae.eval()
     generator.eval()
 
-    # Create output directory
+ 
     os.makedirs('outputs', exist_ok=True)
 
     with torch.no_grad():
@@ -363,7 +363,7 @@ def compare_reconstruction_vs_generation(vae, generator, test_loader, num_sample
         vae_recon, _, _ = vae(test_images)
 
         # GAN generation with standard normal noise
-        torch.manual_seed(42)  # For reproducible results
+        torch.manual_seed(42) 
         noise = torch.randn(num_samples, 128, device=device)  # Standard normal noise
         gan_samples = generator(noise)
 
@@ -371,7 +371,7 @@ def compare_reconstruction_vs_generation(vae, generator, test_loader, num_sample
         def denormalize(tensor):
             return (tensor + 1) / 2
 
-        # Create figure with labels
+      
         fig, axes = plt.subplots(3, num_samples, figsize=(num_samples * 2, 6))
 
         # Convert tensors for matplotlib
@@ -415,9 +415,7 @@ def compare_reconstruction_vs_generation(vae, generator, test_loader, num_sample
 
 def latent_space_interpolation(vae, generator, test_loader, num_interpolations=10):
     print("3. Latent Space Structure - Interpolation Analysis...")
-    print("   GAN Interpolation: Smooth transitions between two random points in latent space")
-    print("   VAE Interpolation: Smooth transitions between latent encodings of real images")
-    print("   Both show how well the latent space captures semantic structure")
+
 
     vae.eval()
     generator.eval()
@@ -429,7 +427,7 @@ def latent_space_interpolation(vae, generator, test_loader, num_interpolations=1
         for images, labels in test_loader:
             all_images.append(images)
             all_labels.append(labels)
-            if len(all_images) >= 5:  # Get enough samples to find different classes
+            if len(all_images) >= 5:  
                 break
 
         all_images = torch.cat(all_images)
@@ -483,7 +481,7 @@ def latent_space_interpolation(vae, generator, test_loader, num_interpolations=1
 
         gan_interpolations = []
         for i, alpha in enumerate(interpolation_factors):
-            # Use spherical interpolation for better results
+            # Use spherical interpolation
             z_interp = slerp(alpha, z1, z2)
             gen_interp = generator(z_interp)
             gan_interpolations.append(gen_interp)
@@ -497,23 +495,17 @@ def latent_space_interpolation(vae, generator, test_loader, num_interpolations=1
         vae_grid = denormalize(vae_interpolations.cpu())
         gan_grid = denormalize(gan_interpolations.cpu())
 
-        # Save with higher quality
+        
         save_image(vae_grid, 'outputs/vae_interpolation.png', nrow=num_interpolations)
         save_image(gan_grid, 'outputs/gan_interpolation.png', nrow=num_interpolations)
 
-        print("   Saved VAE interpolation to outputs/vae_interpolation.png")
-        print("   Saved GAN interpolation to outputs/gan_interpolation.png")
-        print(f"   Interpolation resolution: {vae_interpolations.shape[2]}x{vae_interpolations.shape[3]}")
-        print("   FIXED: Images now generated at 256x256 resolution with improved quality")
-        print("   FIXED: GAN uses spherical interpolation (SLERP) for smoother transitions")
-        print("   FIXED: Controlled noise variance prevents mode collapse artifacts")
 
 def latent_representation_analysis(vae, test_loader, num_samples=1000):
     print("3. Latent Space Structure - Representation Analysis...")
 
     vae.eval()
 
-    # Collect balanced samples from each class for better clustering
+    # Collect balanced samples from each class
     class_samples = {i: [] for i in range(10)}  # CIFAR-10 has 10 classes
     class_latents = {i: [] for i in range(10)}
     samples_per_class = num_samples // 10  # 100 samples per class
@@ -528,7 +520,7 @@ def latent_representation_analysis(vae, test_loader, num_samples=1000):
                 if len(class_latents[label]) < samples_per_class:
                     class_latents[label].append(img)
 
-            # Check if we have enough samples for all classes
+            
             if all(len(class_latents[i]) >= samples_per_class for i in range(10)):
                 break
 
@@ -551,7 +543,7 @@ def latent_representation_analysis(vae, test_loader, num_samples=1000):
 
     # t-SNE analysis with better parameters for clustering
     try:
-        # Better t-SNE parameters for class separation
+     
         perplexity = min(50, len(latent_vectors) // 4)  # Higher perplexity for better global structure
         tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity,
                    learning_rate=200, n_iter=1000, early_exaggeration=12)
@@ -594,15 +586,14 @@ def latent_representation_analysis(vae, test_loader, num_samples=1000):
     plt.savefig('outputs/latent_analysis.png', dpi=150, bbox_inches='tight')
     plt.close()
 
-    print("   Saved latent space analysis to outputs/latent_analysis.png")
     print(f"   PCA explained variance ratio: {pca.explained_variance_ratio_}")
 
-    # Enhanced Semantic factor analysis with meaningful latent space exploration
-    print("   Performing enhanced semantic analysis...")
+
+    print("   Performing enhanced semantic analysis")
 
     # Calculate variance across all latent dimensions to find most meaningful ones
     latent_variance = np.var(latent_vectors, axis=0)
-    top_varying_dims = np.argsort(latent_variance)[-10:][::-1]  # Top 10 most varying dimensions
+    top_varying_dims = np.argsort(latent_variance)[-10:][::-1] 
     most_varying_dims = top_varying_dims[:5]  # Use top 5 most varying dimensions
 
     fig, axes = plt.subplots(len(most_varying_dims), 9, figsize=(20, len(most_varying_dims) * 2.5))
@@ -610,7 +601,6 @@ def latent_representation_analysis(vae, test_loader, num_samples=1000):
         axes = axes.reshape(1, -1)
 
     with torch.no_grad():
-        # Use a more diverse set of base latent vectors from different classes
         class_samples = []
         class_labels = []
 
@@ -635,17 +625,14 @@ def latent_representation_analysis(vae, test_loader, num_samples=1000):
             mu, _ = vae.encode(sample)
             base_latents.append(mu)
 
-        # Use different class samples as bases instead of averaging
-        # This should show more meaningful semantic variations
 
-        # Use wider range for more dramatic semantic changes
         dim_values = torch.linspace(-4, 4, 9)
 
         # Test each of the most varying dimensions
         for row_idx, dim_idx in enumerate(most_varying_dims):
             variations = []
 
-            # Use the first class sample as base (avoid averaging blur)
+            # Use the first class sample as base 
             base_z = base_latents[0].clone()  # Use single class, not average
 
             for val in dim_values:
@@ -678,10 +665,10 @@ def latent_representation_analysis(vae, test_loader, num_samples=1000):
     plt.savefig('outputs/semantic_analysis.png', dpi=200, bbox_inches='tight')
     plt.close()
 
-    print("   Saved enhanced semantic factor analysis to outputs/semantic_analysis.png")
+
     print(f"   Analyzed dimensions: {most_varying_dims} with highest variance")
 
-    # Additional analysis: Find most varying dimensions
+
     with torch.no_grad():
         # Sample multiple images and their latent representations
         all_images = []
@@ -706,12 +693,12 @@ def latent_representation_analysis(vae, test_loader, num_samples=1000):
 # ----------------------------------------------------------------------------
 
 def ood_analysis(vae, generator, test_loader):
-    print("4. Out-of-Distribution (OOD) Analysis...")
+    print("4. Out-of-Distribution (OOD) Analysis")
 
     vae.eval()
     generator.eval()
 
-    # Load CIFAR-100 or create synthetic OOD data
+    # Load CIFAR-100
     try:
         ood_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -749,7 +736,7 @@ def ood_analysis(vae, generator, test_loader):
         print(f"   OOD images - Average reconstruction error: {ood_recon_error.mean().item():.6f}")
 
         # Systematic GAN latent extrapolation stress testing
-        torch.manual_seed(42)  # For reproducible results
+        torch.manual_seed(42)  
 
         # Test multiple levels of latent extremeness
         latent_scales = [1.0, 2.0, 3.0, 4.0, 6.0]  # 1.0 = normal, 6.0 = very extreme
@@ -766,7 +753,7 @@ def ood_analysis(vae, generator, test_loader):
             scale_images[scale] = generated
 
             # Measure image quality degradation
-            # Check for NaN/inf values (complete failure)
+
             has_nan = torch.isnan(generated).any()
             has_inf = torch.isinf(generated).any()
 
@@ -782,7 +769,7 @@ def ood_analysis(vae, generator, test_loader):
             status = "DEGRADED" if (has_nan or has_inf or pixel_var < 0.01) else "STABLE"
             print(f"     Scale {scale}x: {status} (var={pixel_var:.4f})")
 
-        # Create enhanced GAN stress testing visualization
+        # Create GAN stress testing visualization
         def denormalize(tensor):
             return torch.clamp((tensor + 1) / 2, 0, 1)
 
@@ -817,7 +804,6 @@ def ood_analysis(vae, generator, test_loader):
         plt.tight_layout()
         plt.savefig('outputs/gan_stress_test.png', dpi=150, bbox_inches='tight')
         plt.close()
-        print("   Saved GAN stress test visualization to outputs/gan_stress_test.png")
 
         # Use standard scales for visualization
         normal_noise = torch.randn(16, 128, device=device)  # 1.0x standard
@@ -826,11 +812,11 @@ def ood_analysis(vae, generator, test_loader):
         normal_gen = generator(normal_noise)
         extreme_gen = generator(extreme_noise)
 
-        # Create organized comparison figure
+
         def denormalize(tensor):
             return torch.clamp((tensor + 1) / 2, 0, 1)
 
-        # Create figure with proper labels
+
         fig, axes = plt.subplots(6, 8, figsize=(20, 15))
 
         # Convert tensors for plotting
@@ -867,7 +853,7 @@ def ood_analysis(vae, generator, test_loader):
         plt.tight_layout()
         plt.savefig('outputs/ood_analysis.png', dpi=150, bbox_inches='tight')
         plt.close()
-        print("   Saved OOD analysis to outputs/ood_analysis.png")
+   
 
         # Anomaly detection using reconstruction error
         threshold = normal_recon_error.mean() + 2 * normal_recon_error.std()
@@ -979,7 +965,7 @@ def evaluate_models(vae, generator, test_loader, num_samples=1000):
         vae_recons, _, _ = vae(real_images)
 
         # Generate GAN samples with standard noise
-        torch.manual_seed(42)  # For reproducible results
+        torch.manual_seed(42)  
         noise = torch.randn(num_samples, 128, device=device)  # Standard normal noise
         gan_samples = generator(noise)
 
@@ -987,7 +973,7 @@ def evaluate_models(vae, generator, test_loader, num_samples=1000):
         recon_error = F.mse_loss(vae_recons, real_images)
         print(f"   VAE Reconstruction Error (MSE): {recon_error.item():.6f}")
 
-        # Normalize images for FID calculation
+        
         def normalize_for_fid(images):
             return (images + 1) / 2  # Convert from [-1,1] to [0,1]
 
@@ -1004,10 +990,6 @@ def evaluate_models(vae, generator, test_loader, num_samples=1000):
         if gan_fid is not None:
             print(f"   GAN FID Score: {gan_fid:.2f}")
 
-        # Diversity analysis - check class distribution
-        # This is a simplified version - you could use a pre-trained classifier for better analysis
-        print("   Diversity analysis completed (visual inspection recommended)")
-
 # ----------------------------------------------------------------------------
 # ----------------------------- Main Execution ------------------------------
 # ----------------------------------------------------------------------------
@@ -1019,10 +1001,9 @@ def main():
     # Initialize parameters
     latent_dim = 128
 
-    # Setup data (32x32 CIFAR-10 default)
     train_loader, test_loader = setup_data()
 
-    # Initialize models (simple student-friendly version)
+    # Initialize models
     vae = VAE(latent_dim=latent_dim)
     generator = DCGANGenerator(latent_dim=latent_dim)
     discriminator = DCGANDiscriminator()
@@ -1035,11 +1016,10 @@ def main():
     print("STEP 1: TRAINING MODELS")
     print("="*50)
 
-    # Train VAE - faster with fewer epochs for 32x32
+    # Train VAE 
     vae_losses = train_vae(vae, train_loader, num_epochs=100, lr=2e-4, beta=0.01)
 
-    # Train GAN - proper epochs for good results
-    # Strengthen generator: Higher learning rate and better balance
+    # Train GAN 
     g_losses, d_losses, d_accuracies = train_gan(generator, discriminator, train_loader, num_epochs=100, lr_g=3e-4, lr_d=8e-5, latent_dim=latent_dim)
 
     # Plot training curves with discriminator accuracy
