@@ -1094,7 +1094,6 @@ def main():
     torch.save(vae.state_dict(), 'outputs/vae_model.pth')
     torch.save(generator.state_dict(), 'outputs/gan_generator.pth')
     torch.save(discriminator.state_dict(), 'outputs/gan_discriminator.pth')
-    print("\n   Models saved to outputs/")
 
 if __name__ == "__main__":
     main()
