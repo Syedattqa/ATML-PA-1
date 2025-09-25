@@ -1,18 +1,8 @@
-<<<<<<< HEAD
 # WORKFLOW
 
-This project implements and compares 
-Variational Autoencoders (VAE) and Generative Adversarial Networks (GAN) on the CIFAR-10 dataset.
+This project implements and compares CNN vs VIT, VAEs vs GAN and CLIP.
 The comparison includes training, evaluation, and analysis of both models across multiple dimensions.
 
-## Project Overview
-
-The analysis includes:
-1. Model training with loss tracking
-2. Reconstruction vs Generation comparison
-3. Latent space structure analysis with interpolation
-4. Out-of-distribution (OOD) robustness testing
-5. Comprehensive evaluation metrics including FID scores
 
 
 ## Installation
@@ -36,6 +26,8 @@ To run the full VAE vs GAN comparison:
 python Task2.py
 ```
 
+and similarly the rest .py files, for .ipynb, you can run it directly, in Jupyter Notebook.
+
 This will execute the following steps:
 
 1. **Dataset Setup**: Download and prepare CIFAR-10 dataset
@@ -45,60 +37,3 @@ This will execute the following steps:
 5. **OOD Testing**: Test robustness with out-of-distribution data
 6. **Evaluation**: Calculate metrics including FID scores
 
-
-### Output
-
-The script generates several outputs in the `outputs/` directory:
-
-- `training_curves.png`: Training loss curves for both models
-- `reconstruction_vs_generation.png`: Side-by-side comparison of reconstructions
-- `vae_interpolation.png`: VAE latent space interpolation
-- `gan_interpolation.png`: GAN latent space interpolation
-- `latent_analysis.png`: PCA and t-SNE visualization of latent space
-- `semantic_analysis.png`: Semantic factor analysis
-- `ood_analysis.png`: Out-of-distribution robustness test
-- `gan_stress_test.png`: GAN latent extrapolation stress test
-- `vae_model.pth`: Trained VAE model weights
-- `gan_generator.pth`: Trained GAN generator weights
-- `gan_discriminator.pth`: Trained GAN discriminator weights
-
-
-## Configuration
-
-### Key Parameters
-
-You can modify these parameters in the `main()` function:
-
-```python
-# Training parameters
-num_epochs = 100
-batch_size = 128
-latent_dim = 128
-
-# VAE parameters
-vae_lr = 2e-4
-beta = 0.01  # KL divergence weight
-
-# GAN parameters
-gan_lr_g = 3e-4  # Generator learning rate
-gan_lr_d = 8e-5  # Discriminator learning rate
-```
-=======
-# ATML – PA1
-
-This repository contains code for domain generalization experiments (CNN vs ViT on PACS, plus other robustness tests).
-
-## How to run PACS domain generalization
-Train on Photo + Art + Cartoon, test on Sketch:
-
-Regenerate results/plots from checkpoints (no retraining):
-
-## Contents
-- `pacs.py` — main training & evaluation script
-- `weights/` — pretrained/fine-tuned checkpoints
-- `requirements.txt` — dependencies
-
-## Notes
-- Datasets (`pacs/`, `data/`) are **not included** due to size.
-- See `.gitignore` for excluded paths.
->>>>>>> b3d68bb (Initial commit: code, scripts, weights, README, requirements)
