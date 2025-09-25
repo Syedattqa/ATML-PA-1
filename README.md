@@ -1,14 +1,10 @@
-# VAE vs GAN Comparison on CIFAR-10
+# WORKFLOW
 
 This project implements and compares 
 Variational Autoencoders (VAE) and Generative Adversarial Networks (GAN) on the CIFAR-10 dataset.
 The comparison includes training, evaluation, and analysis of both models across multiple dimensions.
 
 ## Project Overview
-
-This project performs a comprehensive comparison between:
-- **VAE (Variational Autoencoder)**: Focuses on reconstruction and latent space structure
-- **DCGAN (Deep Convolutional GAN)**: Focuses on generation quality and adversarial training
 
 The analysis includes:
 1. Model training with loss tracking
