@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # WORKFLOW
 
 This project implements and compares 
@@ -82,3 +83,22 @@ beta = 0.01  # KL divergence weight
 gan_lr_g = 3e-4  # Generator learning rate
 gan_lr_d = 8e-5  # Discriminator learning rate
 ```
+=======
+# ATML – PA1
+
+This repository contains code for domain generalization experiments (CNN vs ViT on PACS, plus other robustness tests).
+
+## How to run PACS domain generalization
+Train on Photo + Art + Cartoon, test on Sketch:
+
+Regenerate results/plots from checkpoints (no retraining):
+
+## Contents
+- `pacs.py` — main training & evaluation script
+- `weights/` — pretrained/fine-tuned checkpoints
+- `requirements.txt` — dependencies
+
+## Notes
+- Datasets (`pacs/`, `data/`) are **not included** due to size.
+- See `.gitignore` for excluded paths.
+>>>>>>> b3d68bb (Initial commit: code, scripts, weights, README, requirements)
